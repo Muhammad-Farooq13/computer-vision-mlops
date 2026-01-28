@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Computer Vision Model - Inference API</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            background: #f8f9fa;
+            margin-bottom: 30px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .upload-area:hover {
+            border-color: #764ba2;
+            background: #e9ecef;
+        }
+        
+        .upload-area.dragover {
+            border-color: #764ba2;
+            background: #dee2e6;
+        }
+        
+        .upload-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: #667eea;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin: 10px 5px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        #fileInput {
+            display: none;
+        }
+        
+        .preview-container {
+            margin-top: 30px;
+            display: none;
+        }
+        
+        .preview-image {
+            max-width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        
+        .results {
+            margin-top: 30px;
+            display: none;
+        }
+        
+        .prediction-item {
+            background: #f8f9fa;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: transform 0.2s;
+        }
+        
+        .prediction-item:hover {
+            transform: translateX(5px);
+        }
+        
+        .prediction-item.top {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+        
+        .class-name {
+            flex-grow: 1;
+        }
+        
+        .probability {
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            display: none;
+        }
+        
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            display: none;
+        }
+        
+        .info-section {
+            background: #e7f3ff;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .info-section h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .info-section ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .info-section li {
+            padding: 8px 0;
+            border-bottom: 1px solid #c5e1ff;
+        }
+        
+        .info-section li:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 Computer Vision Model</h1>
+            <p>Upload an image to get predictions</p>
+        </div>
+        
+        <div class="content">
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">📁</div>
+                <h3>Click to upload or drag and drop</h3>
+                <p>Supported formats: JPG, JPEG, PNG, BMP</p>
+                <p>Maximum file size: 16MB</p>
+                <input type="file" id="fileInput" accept="image/*">
+            </div>
+            
+            <div class="text-center">
+                <button class="btn" onclick="document.getElementById('fileInput').click()">
+                    Choose File
+                </button>
+                <button class="btn" id="predictBtn" onclick="predict()" disabled>
+                    Make Prediction
+                </button>
+                <button class="btn" id="clearBtn" onclick="clearAll()" disabled>
+                    Clear
+                </button>
+            </div>
+            
+            <div class="error" id="errorMsg"></div>
+            <div class="success" id="successMsg"></div>
+            
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Processing image...</p>
+            </div>
+            
+            <div class="preview-container" id="previewContainer">
+                <h3>Image Preview</h3>
+                <img id="previewImage" class="preview-image" src="" alt="Preview">
+            </div>
+            
+            <div class="results" id="results">
+                <h3>Predictions</h3>
+                <div id="predictionsList"></div>
+            </div>
+            
+            <div class="info-section">
+                <h3>How to use:</h3>
+                <ul>
+                    <li>📤 Upload an image using the upload area above</li>
+                    <li>🔮 Click "Make Prediction" to classify the image</li>
+                    <li>📊 View the top predictions with confidence scores</li>
+                    <li>🔄 Click "Clear" to start over</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let selectedFile = null;
+        
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const previewContainer = document.getElementById('previewContainer');
+        const previewImage = document.getElementById('previewImage');
+        const predictBtn = document.getElementById('predictBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const results = document.getElementById('results');
+        const predictionsList = document.getElementById('predictionsList');
+        const loading = document.getElementById('loading');
+        const errorMsg = document.getElementById('errorMsg');
+        const successMsg = document.getElementById('successMsg');
+        
+        // Click to upload
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+        
+        // File selection
+        fileInput.addEventListener('change', handleFileSelect);
+        
+        // Drag and drop
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            
+            if (e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+                handleFileSelect();
+            }
+        });
+        
+        function handleFileSelect() {
+            const file = fileInput.files[0];
+            
+            if (file) {
+                selectedFile = file;
+                
+                // Show preview
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    previewImage.src = e.target.result;
+                    previewContainer.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+                
+                // Enable buttons
+                predictBtn.disabled = false;
+                clearBtn.disabled = false;
+                
+                // Hide results
+                results.style.display = 'none';
+                hideMessages();
+            }
+        }
+        
+        async function predict() {
+            if (!selectedFile) {
+                showError('Please select an image first');
+                return;
+            }
+            
+            // Show loading
+            loading.style.display = 'block';
+            results.style.display = 'none';
+            hideMessages();
+            predictBtn.disabled = true;
+            
+            // Create form data
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+            formData.append('top_k', 5);
+            
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayPredictions(data.predictions);
+                    showSuccess('Prediction completed successfully!');
+                } else {
+                    showError(data.error || 'Prediction failed');
+                }
+            } catch (error) {
+                showError('Error connecting to server: ' + error.message);
+            } finally {
+                loading.style.display = 'none';
+                predictBtn.disabled = false;
+            }
+        }
+        
+        function displayPredictions(predictions) {
+            predictionsList.innerHTML = '';
+            
+            predictions.forEach((pred, index) => {
+                const item = document.createElement('div');
+                item.className = 'prediction-item' + (index === 0 ? ' top' : '');
+                
+                const percentage = (pred.probability * 100).toFixed(2);
+                
+                item.innerHTML = `
+                    <span class="class-name">${index + 1}. ${pred.class_name}</span>
+                    <span class="probability">${percentage}%</span>
+                `;
+                
+                predictionsList.appendChild(item);
+            });
+            
+            results.style.display = 'block';
+        }
+        
+        function clearAll() {
+            selectedFile = null;
+            fileInput.value = '';
+            previewContainer.style.display = 'none';
+            results.style.display = 'none';
+            predictBtn.disabled = true;
+            clearBtn.disabled = true;
+            hideMessages();
+        }
+        
+        function showError(message) {
+            errorMsg.textContent = message;
+            errorMsg.style.display = 'block';
+            successMsg.style.display = 'none';
+        }
+        
+        function showSuccess(message) {
+            successMsg.textContent = message;
+            successMsg.style.display = 'block';
+            errorMsg.style.display = 'none';
+        }
+        
+        function hideMessages() {
+            errorMsg.style.display = 'none';
+            successMsg.style.display = 'none';
+        }
+        
+        // Check model status on load
+        async function checkModelStatus() {
+            try {
+                const response = await fetch('/health');
+                const data = await response.json();
+                
+                if (!data.model_loaded) {
+                    showError('Warning: Model is not loaded. Please check server logs.');
+                }
+            } catch (error) {
+                console.error('Error checking model status:', error);
+            }
+        }
+        
+        window.onload = checkModelStatus;
+    </script>
+</body>
+</html>
