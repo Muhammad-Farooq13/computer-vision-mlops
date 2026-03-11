@@ -3,17 +3,19 @@ Computer Vision MLOps — Streamlit Dashboard
 Interactive demo for the vehicle detection/classification pipeline.
 
 Runs entirely on CPU-safe packages (no torch, no cv2 required).
+Demo model: sklearn RandomForest on 128-d color+HSV histogram features.
 """
 from __future__ import annotations
 
 import io
+import pickle
 import textwrap
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import streamlit as st
-from PIL import Image, ImageDraw, ImageFilter, ImageOps
+from PIL import Image, ImageFilter, ImageOps
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Page config
@@ -79,6 +81,45 @@ def load_all_annotations() -> dict[str, pd.DataFrame]:
         ann_path = REPO_ROOT / split / "_annotations.txt"
         splits[split] = _parse_annotations(ann_path)
     return splits
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Demo model helpers
+# ─────────────────────────────────────────────────────────────────────────────
+
+@st.cache_resource(show_spinner=False)
+def load_demo_model():
+    """Load the pre-trained sklearn demo model bundle."""
+    model_path = REPO_ROOT / "models" / "demo_model.pkl"
+    if not model_path.exists():
+        return None
+    with open(model_path, "rb") as f:
+        return pickle.load(f)
+
+
+def extract_features(img: Image.Image) -> np.ndarray:
+    """Mirror of train_demo.py feature extraction (128-d)."""
+    img_rgb = img.convert("RGB").resize((128, 128))
+    arr_rgb = np.array(img_rgb, dtype=np.float32) / 255.0
+
+    rgb_feats = []
+    for ch in range(3):
+        hist, _ = np.histogram(arr_rgb[:, :, ch], bins=32, range=(0, 1))
+        rgb_feats.append(hist / hist.sum())
+
+    img_hsv = img_rgb.convert("HSV")
+    arr_hsv = np.array(img_hsv, dtype=np.float32)
+    h_hist, _ = np.histogram(arr_hsv[:, :, 0], bins=16, range=(0, 255))
+    s_hist, _ = np.histogram(arr_hsv[:, :, 1], bins=8,  range=(0, 255))
+    v_hist, _ = np.histogram(arr_hsv[:, :, 2], bins=8,  range=(0, 255))
+
+    def _norm(h):
+        return h / max(h.sum(), 1e-9)
+
+    return np.concatenate(
+        [rgb_feats[0], rgb_feats[1], rgb_feats[2],
+         _norm(h_hist), _norm(s_hist), _norm(v_hist)]
+    ).astype(np.float32)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -283,62 +324,113 @@ with tabs[1]:
 # ══════════════════════════════════════════════════════════════════════════════
 with tabs[2]:
     st.title("🖼️ Predict Demo")
+
+    # Load model once
+    bundle = load_demo_model()
+    if bundle is None:
+        st.error(
+            "Demo model not found at `models/demo_model.pkl`.  \n"
+            "Run `python train_demo.py` to generate it."
+        )
+    else:
+        model_info_col, _ = st.columns([2, 1])
+        with model_info_col:
+            trained_on = "real images" if bundle.get("trained_on_real_data") else "synthetic data"
+            st.info(
+                f"**Demo model loaded** — sklearn RandomForest · "
+                f"{bundle['n_samples']:,} training samples ({trained_on}) · "
+                f"Test accuracy {bundle['test_accuracy']*100:.1f}% · "
+                f"Feature dim {bundle['feature_dim']}"
+            )
+
     st.markdown(
-        "Upload a vehicle image to see the preprocessing pipeline in action.  \n"
-        "Pixel-level feature statistics are extracted with **NumPy + Pillow** "
-        "(no GPU required)."
+        "Upload any vehicle image — the model extracts **128-d color + HSV "
+        "histogram features** and classifies it using a RandomForest trained "
+        "on the vehicle dataset."
     )
 
     uploaded = st.file_uploader(
         "Upload an image (JPG / PNG)",
         type=["jpg", "jpeg", "png"],
-        help="Any vehicle photo works — the model pipeline shows preprocessing steps.",
+        help="Any vehicle photo — Ambulance, Bus, Car, Motorcycle or Truck.",
     )
 
-    if uploaded is not None:
+    if uploaded is not None and bundle is not None:
         img_pil = Image.open(io.BytesIO(uploaded.read())).convert("RGB")
         orig_w, orig_h = img_pil.size
 
-        st.subheader("Original Image")
-        st.image(img_pil, caption=f"Original: {orig_w}×{orig_h} px", use_column_width=True)
-
-        st.divider()
+        # ── Preprocessing pipeline ──────────────────────────────────────────
         st.subheader("Preprocessing Pipeline")
-
-        # Step 1: resize
         TARGET = (224, 224)
-        img_resized = img_pil.resize(TARGET, Image.BILINEAR)
-
-        # Step 2: auto-contrast
+        img_resized  = img_pil.resize(TARGET, Image.BILINEAR)
         img_contrast = ImageOps.autocontrast(img_resized)
+        img_sharp    = img_contrast.filter(ImageFilter.SHARPEN)
+        img_gray     = img_sharp.convert("L")
 
-        # Step 3: sharpened
-        img_sharp = img_contrast.filter(ImageFilter.SHARPEN)
-
-        # Step 4: grayscale
-        img_gray = img_sharp.convert("L")
-
-        cols = st.columns(4)
-        cols[0].image(img_resized, caption="1) Resize 224×224", use_column_width=True)
-        cols[1].image(img_contrast, caption="2) Auto-contrast", use_column_width=True)
-        cols[2].image(img_sharp, caption="3) Sharpen", use_column_width=True)
-        cols[3].image(img_gray, caption="4) Grayscale", use_column_width=True)
+        p_cols = st.columns(5)
+        p_cols[0].image(img_pil,      caption=f"Original {orig_w}×{orig_h}", use_column_width=True)
+        p_cols[1].image(img_resized,  caption="1) Resize 224×224",           use_column_width=True)
+        p_cols[2].image(img_contrast, caption="2) Auto-contrast",             use_column_width=True)
+        p_cols[3].image(img_sharp,    caption="3) Sharpen",                   use_column_width=True)
+        p_cols[4].image(img_gray,     caption="4) Grayscale",                 use_column_width=True)
 
         st.divider()
+
+        # ── Model inference ─────────────────────────────────────────────────
+        st.subheader("Model Prediction")
+        feats = extract_features(img_pil).reshape(1, -1)
+        clf   = bundle["model"]
+        le    = bundle["label_encoder"]
+
+        pred_idx   = clf.predict(feats)[0]
+        pred_proba = clf.predict_proba(feats)[0]
+        pred_class = le.inverse_transform([pred_idx])[0]
+        confidence = pred_proba[pred_idx]
+
+        # Prediction banner
+        colour = CLASS_COLORS.get(pred_class, "#ffffff")
+        st.markdown(
+            f"<div style='background:{colour}22;border-left:6px solid {colour};"
+            f"padding:12px 20px;border-radius:6px;'>"
+            f"<span style='font-size:1.6rem;font-weight:700;color:{colour}'>"
+            f"{pred_class}</span>"
+            f"<span style='font-size:1.1rem;color:#ccc;margin-left:16px'>"
+            f"confidence {confidence*100:.1f}%</span></div>",
+            unsafe_allow_html=True,
+        )
+        st.markdown("")
+
+        # All-class confidence bars
+        classes_ordered = bundle["classes"]
+        proba_map = dict(zip(le.classes_, pred_proba))
+        conf_df = pd.DataFrame({
+            "Class":      classes_ordered,
+            "Confidence": [proba_map.get(c, 0.0) for c in classes_ordered],
+        }).set_index("Class")
+        st.bar_chart(conf_df)
+
+        # Numerical breakdown
+        conf_table = pd.DataFrame({
+            "Class":      classes_ordered,
+            "Confidence": [f"{proba_map.get(c, 0.0)*100:.2f}%" for c in classes_ordered],
+        })
+        st.dataframe(conf_table, use_container_width=True, hide_index=True)
+
+        st.divider()
+
+        # ── Pixel statistics ────────────────────────────────────────────────
         st.subheader("Pixel-Level Feature Statistics")
+        arr = np.array(img_resized, dtype=np.float32) / 255.0
+        r_ch, g_ch, b_ch = arr[:, :, 0], arr[:, :, 1], arr[:, :, 2]
 
-        arr = np.array(img_resized, dtype=np.float32) / 255.0  # H×W×3 in [0,1]
-        r, g, b = arr[:, :, 0], arr[:, :, 1], arr[:, :, 2]
-
-        # ImageNet normalisation (what the model would apply)
         MEAN = np.array([0.485, 0.456, 0.406])
         STD  = np.array([0.229, 0.224, 0.225])
         arr_norm = (arr - MEAN) / STD
 
         stats = {
             "Channel": ["R", "G", "B"],
-            "Raw Mean": [f"{r.mean():.4f}", f"{g.mean():.4f}", f"{b.mean():.4f}"],
-            "Raw Std":  [f"{r.std():.4f}",  f"{g.std():.4f}",  f"{b.std():.4f}"],
+            "Raw Mean": [f"{r_ch.mean():.4f}", f"{g_ch.mean():.4f}", f"{b_ch.mean():.4f}"],
+            "Raw Std":  [f"{r_ch.std():.4f}",  f"{g_ch.std():.4f}",  f"{b_ch.std():.4f}"],
             "Norm Mean": [f"{arr_norm[:,:,0].mean():.4f}",
                           f"{arr_norm[:,:,1].mean():.4f}",
                           f"{arr_norm[:,:,2].mean():.4f}"],
@@ -355,25 +447,20 @@ with tabs[2]:
         col_b.metric("Max pixel", f"{arr.max():.3f}")
 
         st.divider()
-        st.subheader("Histogram (R / G / B channels)")
-
+        st.subheader("Color Histogram (R / G / B)")
         hist_data = {}
         for ch_idx, ch_name in enumerate(["R", "G", "B"]):
             ch_arr = (arr[:, :, ch_idx].ravel() * 255).astype(np.uint8)
             hist_vals, bin_edges = np.histogram(ch_arr, bins=32, range=(0, 256))
             bin_centers = ((bin_edges[:-1] + bin_edges[1:]) / 2).astype(int)
             hist_data[ch_name] = pd.Series(hist_vals, index=bin_centers)
+        st.line_chart(pd.DataFrame(hist_data))
 
-        hist_df = pd.DataFrame(hist_data)
-        st.line_chart(hist_df)
+    elif uploaded is not None and bundle is None:
+        st.warning("Model not loaded — run `python train_demo.py` first.")
 
-        st.info(
-            "**In production:** the preprocessed tensor is forwarded through a "
-            "pretrained ResNet/EfficientNet/VGG backbone running on GPU, "
-            "producing a classification prediction returned by the Flask API."
-        )
     else:
-        st.info("👆 Upload an image above to begin.")
+        st.info("👆 Upload a vehicle image above to get a prediction.")
 
         # Show a colour swatch as placeholder
         st.subheader("Vehicle Classes")

@@ -1,0 +1,41 @@
+{
+  "test_accuracy": 1.0,
+  "n_samples": 1500,
+  "n_train": 1200,
+  "n_test": 300,
+  "classes": [
+    "Ambulance",
+    "Bus",
+    "Car",
+    "Motorcycle",
+    "Truck"
+  ],
+  "per_class": {
+    "Ambulance": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0
+    },
+    "Bus": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0
+    },
+    "Car": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0
+    },
+    "Motorcycle": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0
+    },
+    "Truck": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0
+    }
+  },
+  "trained_on_real_data": false
+}

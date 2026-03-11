@@ -1,4 +1,4 @@
-# Python
+﻿# Python
 __pycache__/
 *.py[cod]
 *$py.class
@@ -85,6 +85,8 @@ models/saved_models/*/*.pth
 models/checkpoints/
 *.h5
 *.pkl
+!models/demo_model.pkl
+!models/demo_metrics.json
 *.pickle
 
 # Uploaded files
@@ -136,3 +138,4 @@ pip-delete-this-directory.txt
 # Backup files
 *.bak
 *.backup
+
