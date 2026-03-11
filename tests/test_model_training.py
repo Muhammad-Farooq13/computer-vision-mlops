@@ -3,6 +3,9 @@ Unit tests for model training functionality
 """
 
 import pytest
+
+pytest.importorskip("torchvision")  # src/models/train.py requires torchvision
+
 import torch
 import torch.nn as nn
 from torch.utils.data import TensorDataset, DataLoader

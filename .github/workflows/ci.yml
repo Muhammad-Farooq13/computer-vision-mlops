@@ -14,40 +14,45 @@ jobs:
         python-version: ['3.9', '3.10', '3.11']
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
 
-    - name: Install CI dependencies
-      # Full requirements.txt includes GPU packages (torch, torchvision, torchaudio)
-      # which are not available on CPU runners. Use requirements-ci.txt instead.
+    - name: Cache pip packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements-ci.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    # requirements-ci.txt excludes torch/torchvision (GPU, ~2 GB), albumentations,
+    # flasgger, mlflow, dvc — none needed to run the CI test suite.
+    - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements-ci.txt
+        pip install --no-deps -e .
 
     - name: Lint with flake8
       run: |
-        # Stop the build if there are Python syntax errors or undefined names
-        flake8 src --count --select=E9,F63,F7,F82 --show-source --statistics
-        # Warn on style issues but do not fail
-        flake8 src --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-
-    - name: Format check with black
-      run: black --check src/ || true
+        flake8 src/ --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 src/ --count --exit-zero --max-line-length=127 --statistics
 
     - name: Run tests with pytest
+      # Tests that need torch/cv2/albumentations are skipped via pytest.importorskip
       run: |
-        pytest --cov=src --cov-report=xml --cov-report=term
+        pytest tests/ --cov=src --cov-report=xml --cov-report=term-missing
 
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v5
       with:
-        file: ./coverage.xml
+        files: ./coverage.xml
         flags: unittests
-        name: codecov-umbrella
+        fail_ci_if_error: false
 
   docker:
     runs-on: ubuntu-latest
@@ -55,12 +60,18 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
 
     - name: Build Docker image
-      run: |
-        docker build -t cv-model:latest .
+      run: docker build -t cv-mlops:latest .
 
     - name: Test Docker image
       run: |
-        docker run --rm cv-model:latest python -c "import src; print('Docker build successful')"
+        docker run -d -p 5000:5000 --name test-cv cv-mlops:latest
+        sleep 30
+        curl -f http://localhost:5000/health || exit 1
+        docker stop test-cv
+

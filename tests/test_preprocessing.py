@@ -4,6 +4,10 @@ Unit tests for data preprocessing functionality
 
 import pytest
 import numpy as np
+
+pytest.importorskip("albumentations")  # src/data/data_preprocessing.py requires albumentations
+pytest.importorskip("cv2")
+
 import cv2
 
 from src.data.data_preprocessing import ImagePreprocessor

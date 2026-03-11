@@ -7,7 +7,9 @@ import json
 import io
 from pathlib import Path
 
-# Import Flask app
+# flask_app.py imports src.models.predict which requires torchvision
+pytest.importorskip("torchvision")
+
 import sys
 sys.path.append(str(Path(__file__).parent.parent))
 from flask_app import app

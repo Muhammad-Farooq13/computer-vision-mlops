@@ -1,11 +1,11 @@
 """
-Test configuration and fixtures
+Test configuration and fixtures.
+All heavyweight imports (torch, cv2) are done lazily inside fixtures
+so that CI can collect tests without GPU/torch/torchvision installed.
 """
 
-import pytest
-import torch
 import numpy as np
-import cv2
+import pytest
 from pathlib import Path
 
 
@@ -25,10 +25,10 @@ def sample_batch():
 
 @pytest.fixture
 def sample_model():
-    """Create a sample model for testing"""
+    """Create a sample ResNet18 model; skipped if torchvision not installed"""
+    pytest.importorskip("torchvision")
     from src.models.train import CVModel
-    model = CVModel(model_name='resnet18', num_classes=10, pretrained=False)
-    return model
+    return CVModel(model_name="resnet18", num_classes=10, pretrained=False)
 
 
 @pytest.fixture
@@ -41,16 +41,7 @@ def temp_dir(tmp_path):
 def mock_config():
     """Create mock configuration"""
     return {
-        'data': {
-            'image_size': [224, 224],
-            'batch_size': 4
-        },
-        'model': {
-            'architecture': 'resnet18',
-            'num_classes': 10
-        },
-        'training': {
-            'epochs': 2,
-            'learning_rate': 0.001
-        }
+        "data": {"image_size": [224, 224], "batch_size": 4},
+        "model": {"architecture": "resnet18", "num_classes": 10},
+        "training": {"epochs": 2, "learning_rate": 0.001},
     }

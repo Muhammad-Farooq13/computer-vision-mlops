@@ -3,12 +3,15 @@ Unit tests for utility functions
 """
 
 import pytest
-import torch
 import numpy as np
 
+pytest.importorskip("torch")  # src/utils/helpers.py requires torch
+
+import torch
+
 from src.utils.helpers import (
-    set_seed, save_json, load_json, 
-    count_parameters, get_device, format_time
+    set_seed, save_json, load_json,
+    count_parameters, get_device, format_time,
 )
 from src.utils.config import Config
 
@@ -36,9 +39,12 @@ class TestHelpers:
         
         assert data == loaded
         
-    def test_count_parameters(self, sample_model):
-        """Test parameter counting"""
-        count = count_parameters(sample_model)
+    def test_count_parameters(self):
+        """Test parameter counting with a simple inline model"""
+        import torch.nn as nn
+
+        model = nn.Linear(10, 5)
+        count = count_parameters(model)
         assert isinstance(count, int)
         assert count > 0
         

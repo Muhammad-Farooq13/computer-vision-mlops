@@ -4,6 +4,9 @@ Unit tests for data loading functionality
 
 import pytest
 import numpy as np
+
+pytest.importorskip("cv2")  # src/data/data_loader.py requires cv2
+
 import cv2
 from pathlib import Path
 

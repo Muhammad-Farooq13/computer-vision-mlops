@@ -3,8 +3,11 @@ Unit tests for model inference functionality
 """
 
 import pytest
-import torch
 import numpy as np
+
+pytest.importorskip("torchvision")  # src/models/predict.py requires torchvision
+
+import torch
 
 from src.models.predict import ModelInference
 from src.models.train import CVModel

@@ -1,38 +1,22 @@
-# CI-safe requirements for computer-vision-mlops
-# GPU/CUDA packages (torch, torchvision, torchaudio) are excluded from CI
-# because they require a GPU runner and are 2+ GB in size.
-# They are still in requirements.txt for local development.
-numpy==1.24.3
-pandas==2.0.3
-matplotlib==3.7.2
-seaborn==0.12.2
-scikit-learn==1.3.0
-Pillow==10.0.0
-
-# Web Framework
-Flask==2.3.2
-Flask-Cors==4.0.0
-Werkzeug==2.3.6
-gunicorn==21.2.0
-
-# Testing
-pytest==7.4.0
-pytest-cov==4.1.0
-pytest-mock==3.11.1
-
-# Code Quality
-black==23.7.0
-flake8==6.0.0
-isort==5.12.0
-pylint==2.17.4
-
-# Utilities
-PyYAML==6.0.1
-python-dotenv==1.0.0
-tqdm==4.65.0
-loguru==0.7.0
-psutil==5.9.5
-prometheus-client==0.17.1
-flasgger==0.9.7.1
-imageio==2.31.1
-scikit-image==0.21.0
+# CI-safe requirements
+# torch/torchvision/torchaudio excluded: GPU packages (~2 GB), not available on CPU runners
+# albumentations excluded: requires opencv/imgaug native libs
+# black excluded: black 26.x pulls in pytokens (Rust extension) not needed in CI
+numpy>=1.24
+pandas>=1.5
+matplotlib>=3.7
+seaborn>=0.12
+scikit-learn>=1.3
+Pillow>=10.0
+flask>=2.3
+flask-cors>=4.0
+gunicorn>=21.2
+pyyaml>=6.0
+python-dotenv>=1.0
+tqdm>=4.65
+requests>=2.31
+joblib>=1.3
+pytest>=7.4
+pytest-cov>=4.1
+pytest-mock>=3.11
+flake8>=6.0

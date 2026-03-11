@@ -1,649 +1,292 @@
-# Computer Vision Project
-
-[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
-[![PyTorch](https://img.shields.io/badge/PyTorch-2.0+-red.svg)](https://pytorch.org/)
-[![Flask](https://img.shields.io/badge/Flask-2.3+-green.svg)](https://flask.palletsprojects.com/)
-[![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](https://www.docker.com/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
-A production-ready computer vision project with MLOps best practices, featuring Flask API deployment, Docker support, comprehensive testing, and automated pipelines.
-
-## 📋 Table of Contents
-
-- [Project Overview](#project-overview)
-- [Features](#features)
-- [Project Structure](#project-structure)
-- [Dataset](#dataset)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Model Development](#model-development)
-- [Deployment](#deployment)
-- [Testing](#testing)
-- [MLOps Pipeline](#mlops-pipeline)
-- [API Documentation](#api-documentation)
-- [Contributing](#contributing)
-- [License](#license)
-
-## 🎯 Project Overview
-
-This project implements a complete computer vision pipeline for image classification tasks. It follows industry best practices and includes:
-
-- **Data Processing**: Automated data loading, preprocessing, and augmentation
-- **Model Training**: Support for multiple CNN architectures (ResNet, EfficientNet, VGG)
-- **Evaluation**: Comprehensive metrics and visualization tools
-- **Deployment**: Flask REST API with Docker containerization
-- **MLOps**: Automated pipelines with MLflow tracking
-- **Testing**: Unit and integration tests with pytest
-
-### Objectives
-
-- Develop a robust image classification model
-- Implement scalable and maintainable code architecture
-- Enable easy deployment and monitoring
-- Ensure reproducibility and version control
-- Follow MLOps best practices
-
-## ✨ Features
-
-### Core Functionality
-- 🔍 **Multi-Model Support**: ResNet, EfficientNet, VGG architectures
-- 📊 **Data Augmentation**: Comprehensive augmentation pipeline using Albumentations
-- 📈 **Training Monitoring**: Real-time metrics tracking with MLflow
-- 🎨 **Visualization**: Built-in plotting and analysis tools
-- 🔄 **Preprocessing Pipeline**: Automated image preprocessing and normalization
-
-### Deployment & Production
-- 🚀 **Flask REST API**: Production-ready API with health checks
-- 🐳 **Docker Support**: Containerized deployment with docker-compose
-- 📦 **Model Versioning**: Automated model versioning and registry
-- 🔧 **Configuration Management**: YAML-based configuration system
-- 📝 **Comprehensive Logging**: Structured logging with rotation
-
-### Quality & Testing
-- ✅ **Unit Tests**: Comprehensive test coverage with pytest
-- 🧪 **Integration Tests**: API and pipeline testing
-- 📊 **Code Quality**: Black, Flake8, isort integration
-- 🔄 **CI/CD Ready**: Designed for continuous integration
-
-## 📁 Project Structure
-
-```
-OPencv/
-├── api/                          # Flask API components
-│   ├── static/                   # Static files
-│   │   └── uploads/              # Uploaded images
-│   └── templates/                # HTML templates
-│       └── index.html            # Web interface
-│
-├── data/                         # Data directory
-│   ├── raw/                      # Raw dataset
-│   │   ├── train/                # Training images
-│   │   ├── test/                 # Test images
-│   │   └── valid/                # Validation images
-│   └── processed/                # Processed data
-│
-├── models/                       # Model artifacts
-│   └── saved_models/             # Trained model checkpoints
-│
-├── notebooks/                    # Jupyter notebooks
-│   ├── 01_data_exploration.ipynb # Data analysis
-│   └── 02_model_training.ipynb   # Training experiments
-│
-├── src/                          # Source code
-│   ├── data/                     # Data processing
-│   │   ├── data_loader.py        # Data loading utilities
-│   │   └── data_preprocessing.py # Preprocessing functions
-│   │
-│   ├── features/                 # Feature engineering
-│   │   └── feature_extractor.py  # Feature extraction
-│   │
-│   ├── models/                   # Model code
-│   │   ├── train.py              # Training logic
-│   │   ├── evaluate.py           # Evaluation metrics
-│   │   └── predict.py            # Inference engine
-│   │
-│   ├── utils/                    # Utility functions
-│   │   ├── config.py             # Configuration management
-│   │   ├── logger.py             # Logging utilities
-│   │   └── helpers.py            # Helper functions
-│   │
-│   └── visualization/            # Visualization tools
-│       └── visualize.py          # Plotting functions
-│
-├── tests/                        # Test suite
-│   ├── conftest.py               # Test configuration
-│   ├── test_data_loader.py       # Data loading tests
-│   ├── test_preprocessing.py     # Preprocessing tests
-│   ├── test_model_training.py    # Training tests
-│   ├── test_inference.py         # Inference tests
-│   ├── test_utils.py             # Utility tests
-│   └── test_flask_api.py         # API tests
-│
-├── logs/                         # Log files
-├── results/                      # Results and visualizations
-│
-├── config.yaml                   # Project configuration
-├── requirements.txt              # Python dependencies
-├── Dockerfile                    # Docker image definition
-├── docker-compose.yml            # Docker orchestration
-├── .dockerignore                 # Docker ignore patterns
-├── flask_app.py                  # Flask application
-├── mlops_pipeline.py             # MLOps pipeline
-├── pytest.ini                    # Pytest configuration
-└── README.md                     # This file
-```
-
-## 📊 Dataset
-
-### Overview
-
-This project uses an image classification dataset with the following structure:
-
-- **Training Set**: Images for model training
-- **Validation Set**: Images for hyperparameter tuning
-- **Test Set**: Images for final evaluation
-
-### Dataset Information
-
-- **Format**: Images (JPG, PNG, BMP)
-- **Splits**: Train/Valid/Test
-- **Annotations**: Class labels and bounding boxes (if applicable)
-
-### Data Organization
-
-```
-data/raw/
-├── train/
-│   ├── _annotations.txt    # Training annotations
-│   ├── _classes.txt         # Class names
-│   └── *.jpg                # Training images
-├── valid/
-│   ├── _annotations.txt    # Validation annotations
-│   ├── _classes.txt         # Class names
-│   └── *.jpg                # Validation images
-└── test/
-    ├── _annotations.txt    # Test annotations
-    ├── _classes.txt         # Class names
-    └── *.jpg                # Test images
-```
-
-### Preprocessing Steps
-
-1. **Resizing**: All images resized to 224×224 pixels
-2. **Normalization**: Pixel values normalized using ImageNet statistics
-3. **Augmentation**: Random flips, rotations, brightness/contrast adjustments
-4. **Data Validation**: Checking for corrupted images and inconsistencies
-
-## 🚀 Installation
-
-### Prerequisites
-
-- Python 3.9 or higher
-- pip package manager
-- (Optional) CUDA-capable GPU for faster training
-- (Optional) Docker for containerized deployment
-
-### Local Installation
-
-1. **Clone the repository**:
-```bash
-git clone https://github.com/Muhammad-Farooq-13/OPencv.git
-cd OPencv
-```
-
-2. **Create virtual environment**:
-```bash
-python -m venv venv
-
-# Windows
-venv\Scripts\activate
-
-# Linux/Mac
-source venv/bin/activate
-```
-
-3. **Install dependencies**:
-```bash
-pip install -r requirements.txt
-```
-
-4. **Configure the project**:
-```bash
-# Edit config.yaml with your settings
-# Adjust paths, model parameters, training configuration
-```
-
-5. **Organize your data**:
-```bash
-# Move your dataset to data/raw/
-# Ensure train/, valid/, test/ folders exist
-```
-
-### Docker Installation
-
-1. **Build Docker image**:
-```bash
-docker build -t cv-model:latest .
-```
-
-2. **Run with Docker Compose**:
-```bash
-docker-compose up -d
-```
-
-## 💻 Usage
-
-### 1. Data Exploration
-
-Explore your dataset using the provided notebook:
-
-```bash
-jupyter notebook notebooks/01_data_exploration.ipynb
-```
-
-### 2. Train a Model
-
-#### Using Python Script
-
-```bash
-python -m src.models.train
-```
-
-#### Using Jupyter Notebook
-
-```bash
-jupyter notebook notebooks/02_model_training.ipynb
-```
-
-#### Using MLOps Pipeline
-
-```bash
-python mlops_pipeline.py --mode full
-```
-
-### 3. Evaluate Model
-
-```bash
-python mlops_pipeline.py --mode evaluate
-```
-
-### 4. Run Flask API
-
-```bash
-python flask_app.py
-```
-
-The API will be available at `http://localhost:5000`
-
-### 5. Make Predictions
-
-#### Using Python API
-
-```python
-from src.models.predict import ModelInference
-from src.models.train import CVModel
-import cv2
-
-# Load model
-model = CVModel(model_name='resnet50', num_classes=10)
-inference = ModelInference(model, model_path='models/saved_models/best_model.pth')
-
-# Load image
-image = cv2.imread('path/to/image.jpg')
-
-# Predict
-result = inference.predict(image, top_k=5)
-print(f"Prediction: {result['top_class']} ({result['top_probability']:.2%})")
-```
-
-#### Using REST API
-
-```bash
-curl -X POST -F "file=@image.jpg" http://localhost:5000/predict
-```
-
-## 🎓 Model Development
-
-### Supported Architectures
-
-- **ResNet**: ResNet18, ResNet50
-- **EfficientNet**: EfficientNet-B0
-- **VGG**: VGG16
-
-### Training Configuration
-
-Edit `config.yaml` to customize training:
-
-```yaml
-model:
-  architecture: "resnet50"
-  pretrained: true
-  num_classes: 10
-
-training:
-  epochs: 50
-  learning_rate: 0.001
-  batch_size: 32
-  optimizer: "adam"
-```
-
-### Hyperparameter Tuning
-
-The project supports various hyperparameter tuning approaches:
-
-1. **Manual Tuning**: Modify `config.yaml`
-2. **Grid Search**: Implement in `notebooks/02_model_training.ipynb`
-3. **MLflow Tracking**: Automatic logging of all experiments
-
-### Model Selection
-
-Compare different models using the evaluation metrics:
-
-```python
-from src.models.evaluate import compare_models
-
-# Load results from multiple models
-results_list = [results_model1, results_model2, results_model3]
-model_names = ['ResNet50', 'EfficientNet', 'VGG16']
-
-compare_models(results_list, model_names)
-```
-
-## 🚢 Deployment
-
-### Flask Deployment
-
-#### Local Deployment
-
-```bash
-python flask_app.py
-```
-
-Access the web interface at `http://localhost:5000`
-
-#### Production Deployment
-
-Use Gunicorn for production:
-
-```bash
-gunicorn -w 4 -b 0.0.0.0:5000 flask_app:app
-```
-
-### Docker Deployment
-
-#### Build and Run
-
-```bash
-# Build image
-docker build -t cv-model:latest .
-
-# Run container
-docker run -p 5000:5000 -v $(pwd)/models:/app/models cv-model:latest
-```
-
-#### Docker Compose
-
-```bash
-# Start services
-docker-compose up -d
-
-# View logs
-docker-compose logs -f
-
-# Stop services
-docker-compose down
-```
-
-### Environment Variables
-
-Set the following environment variables for deployment:
-
-```bash
-export FLASK_ENV=production
-export MODEL_PATH=/app/models/saved_models/best_model.pth
-export LOG_LEVEL=INFO
-```
-
-## ✅ Testing
-
-### Run All Tests
-
-```bash
-pytest
-```
-
-### Run Specific Test Suites
-
-```bash
-# Data tests
-pytest tests/test_data_loader.py
-
-# Model tests
-pytest tests/test_model_training.py
-
-# API tests
-pytest tests/test_flask_api.py
-```
-
-### Generate Coverage Report
-
-```bash
-pytest --cov=src --cov-report=html
-```
-
-View the report at `htmlcov/index.html`
-
-### Test Configuration
-
-Tests are configured in `pytest.ini`:
-
-```ini
-[pytest]
-testpaths = tests
-addopts = -v --strict-markers --cov=src
-```
-
-## 🔄 MLOps Pipeline
-
-### Pipeline Components
-
-1. **Data Preparation**: Load and preprocess data
-2. **Model Training**: Train with MLflow tracking
-3. **Model Evaluation**: Calculate metrics and generate reports
-4. **Model Versioning**: Version and register models
-5. **Model Monitoring**: Track production performance
-
-### Running the Pipeline
-
-```bash
-# Full pipeline
-python mlops_pipeline.py --mode full
-
-# Training only
-python mlops_pipeline.py --mode train
-
-# Evaluation only
-python mlops_pipeline.py --mode evaluate
-
-# With custom config
-python mlops_pipeline.py --config custom_config.yaml
-```
-
-### MLflow Tracking
-
-View experiments in MLflow UI:
-
-```bash
-mlflow ui
-```
-
-Access at `http://localhost:5000`
-
-### Model Versioning
-
-Models are automatically versioned with timestamps:
-
-```
-models/saved_models/
-├── 20260128_120000/
-│   ├── model.pth
-│   └── metadata.json
-├── 20260128_150000/
-│   ├── model.pth
-│   └── metadata.json
-└── best_model.pth
-```
-
-## 📚 API Documentation
-
-### Endpoints
-
-#### Health Check
-
-```
-GET /health
-```
-
-Response:
-```json
-{
-  "status": "healthy",
-  "model_loaded": true,
-  "timestamp": "2026-01-28T12:00:00"
-}
-```
-
-#### Model Info
-
-```
-GET /model/info
-```
-
-Response:
-```json
-{
-  "model_loaded": true,
-  "architecture": "resnet50",
-  "num_classes": 10,
-  "image_size": [224, 224]
-}
-```
-
-#### Single Prediction
-
-```
-POST /predict
-```
-
-Parameters:
-- `file`: Image file (multipart/form-data)
-- `top_k`: Number of top predictions (optional, default: 5)
-
-Response:
-```json
-{
-  "success": true,
-  "predictions": [
-    {
-      "class_name": "cat",
-      "class_id": 3,
-      "probability": 0.95
-    }
-  ],
-  "top_prediction": {
-    "class": "cat",
-    "probability": 0.95
-  }
-}
-```
-
-#### Batch Prediction
-
-```
-POST /predict/batch
-```
-
-Parameters:
-- `files`: Multiple image files (multipart/form-data)
-
-Response:
-```json
-{
-  "success": true,
-  "count": 3,
-  "results": [...]
-}
-```
-
-## 🤝 Contributing
-
-Contributions are welcome! Please follow these steps:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-### Development Guidelines
-
-- Follow PEP 8 style guide
-- Write unit tests for new features
-- Update documentation as needed
-- Use meaningful commit messages
-
-### Code Quality
-
-Run code quality checks before committing:
-
-```bash
-# Format code
-black src/
-
-# Sort imports
-isort src/
-
-# Check style
-flake8 src/
-
-# Type checking (if using mypy)
-mypy src/
-```
-
-## 📄 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## 🙏 Acknowledgments
-
-- PyTorch team for the deep learning framework
-- Flask team for the web framework
-- Roboflow for dataset management tools
-- The open-source community for various libraries used
-
-## 📞 Contact
-
-**Muhammad Farooq**
-- 📧 Email: mfarooqshafee333@gmail.com
-- 🐙 GitHub: [@Muhammad-Farooq-13](https://github.com/Muhammad-Farooq-13)
-
-For questions or support, please open an issue on GitHub.
-
-## 🗺️ Roadmap
-
-- [ ] Add support for object detection
-- [ ] Implement model quantization for edge deployment
-- [ ] Add Kubernetes deployment configuration
-- [ ] Implement A/B testing framework
-- [ ] Add model interpretability tools (GradCAM, SHAP)
-- [ ] Create web-based annotation tool
-- [ ] Add support for video inference
-- [ ] Implement active learning pipeline
-
-## 📈 Project Status
-
-This project is actively maintained and under continuous development. Current version: 1.0.0
+﻿# Computer Vision MLOps
+
+[![CI](https://github.com/Muhammad-Farooq13/computer-vision-mlops/actions/workflows/ci.yml/badge.svg)](https://github.com/Muhammad-Farooq13/computer-vision-mlops/actions/workflows/ci.yml)
+[![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://www.python.org/downloads/)
+[![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-red.svg)](https://pytorch.org/)
+[![Flask](https://img.shields.io/badge/Flask-2.3%2B-green.svg)](https://flask.palletsprojects.com/)
+[![Docker](https://img.shields.io/badge/Docker-ready-blue.svg)](https://www.docker.com/)
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+A production-ready **vehicle detection and classification** pipeline built with
+PyTorch, Flask, Docker, and GitHub Actions CI/CD.  Five classes (Ambulance, Bus,
+Car, Motorcycle, Truck) — ResNet / EfficientNet / VGG backbones — one command to
+train, one command to serve.
 
 ---
 
-Made with ❤️ for the Computer Vision Community
+## Table of Contents
+
+- [Features](#features)
+- [Project Structure](#project-structure)
+- [Dataset](#dataset)
+- [Quick Start](#quick-start)
+  - [Local (no GPU)](#local-no-gpu)
+  - [Full GPU install](#full-gpu-install)
+  - [Docker](#docker)
+  - [Streamlit app](#streamlit-app)
+- [Usage](#usage)
+  - [Training](#training)
+  - [Evaluation](#evaluation)
+  - [Flask API](#flask-api)
+- [Testing](#testing)
+- [CI/CD](#cicd)
+- [Configuration](#configuration)
+- [Contributing](#contributing)
+- [License](#license)
+
+---
+
+## Features
+
+| Category | Details |
+|----------|---------|
+| **Architectures** | ResNet-18/50, EfficientNet-B0, VGG-16 (PyTorch) |
+| **Augmentation** | Albumentations — flip, rotate, brightness/contrast, SSR |
+| **Feature extraction** | Deep CNN (ResNet/VGG) + classical SIFT / ORB |
+| **Serving** | Flask REST API · Swagger UI · Gunicorn · Docker |
+| **CI/CD** | GitHub Actions — lint, pytest matrix, Docker build + health-check |
+| **Demo** | Streamlit dashboard (CPU-only, runs on Streamlit Cloud) |
+
+---
+
+## Project Structure
+
+```
+computer-vision-mlops/
+|-- src/
+|   |-- data/
+|   |   |-- data_loader.py          # Dataset loading + annotation parser
+|   |   `-- data_preprocessing.py   # Albumentations pipeline
+|   |-- features/
+|   |   `-- feature_extractor.py    # CNN deep features + SIFT/ORB
+|   |-- models/
+|   |   |-- train.py                # CVModel + ModelTrainer (early stopping)
+|   |   |-- evaluate.py             # Accuracy/F1/confusion matrix
+|   |   `-- predict.py              # ModelInference + REST helper
+|   |-- utils/
+|   |   |-- config.py               # YAML config loader
+|   |   |-- logger.py               # Rotating file logger
+|   |   `-- helpers.py              # Seed, EarlyStopping, count_parameters
+|   `-- visualization/
+|       `-- visualize.py            # Loss curves, confusion matrix plots
+|
+|-- tests/                          # pytest suite (15 pass, 4 skip on CI)
+|-- api/templates/index.html        # Web upload interface
+|-- notebooks/                      # Jupyter exploration notebooks
+|-- flask_app.py                    # Entry point for REST API
+|-- streamlit_app.py                # Streamlit dashboard entry point
+|-- Dockerfile                      # Production image (python:3.11-slim)
+|-- docker-compose.yml
+|-- requirements.txt                # Full runtime deps (local/GPU)
+|-- requirements-ci.txt             # Lean CI deps (CPU-safe, no torch)
+|-- pyproject.toml                  # PEP 517 build + linting config
+|-- config.yaml                     # Centralised model & data settings
+`-- pytest.ini
+```
+
+---
+
+## Dataset
+
+| Property | Value |
+|----------|-------|
+| Task | Object detection (bounding-box annotations) |
+| Classes | Ambulance · Bus · Car · Motorcycle · Truck |
+| Format | `filename x1,y1,x2,y2,class_id` per line |
+| Source | [Roboflow](https://roboflow.com) — see `README.dataset.txt` |
+| Splits | `train/`, `valid/`, `test/` — each with `_annotations.txt` |
+
+Images are **not** committed to this repository.  Download the dataset from
+Roboflow and place the split folders at the repo root.
+
+---
+
+## Quick Start
+
+### Local (no GPU)
+
+```bash
+# Clone
+git clone https://github.com/Muhammad-Farooq13/computer-vision-mlops.git
+cd computer-vision-mlops
+
+# Create virtual environment
+python -m venv .venv
+# Windows
+.venv\Scripts\activate
+# macOS/Linux
+source .venv/bin/activate
+
+# Install CPU-safe dependencies
+pip install -r requirements-ci.txt
+pip install -e .
+```
+
+### Full GPU install
+
+```bash
+pip install -r requirements.txt
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cu118
+pip install albumentations opencv-python
+pip install -e .
+```
+
+### Docker
+
+```bash
+# Build
+docker build -t cv-mlops:latest .
+
+# Run (exposes port 5000)
+docker run -p 5000:5000 cv-mlops:latest
+
+# Or with compose
+docker compose up --build
+```
+
+Health-check is available at `GET http://localhost:5000/health`.
+
+### Streamlit app
+
+```bash
+pip install streamlit>=1.32 pyarrow>=12.0
+streamlit run streamlit_app.py
+```
+
+Or visit the live demo on **Streamlit Cloud** (badge at the top of this README).
+
+---
+
+## Usage
+
+### Training
+
+```bash
+python src/models/train.py
+```
+
+Key `config.yaml` options:
+
+| Key | Default | Options |
+|-----|---------|---------|
+| `model.architecture` | `resnet50` | `resnet18`, `resnet50`, `efficientnet_b0`, `vgg16` |
+| `model.num_classes` | `10` | set to number of dataset classes |
+| `training.epochs` | `50` | any positive int |
+| `training.learning_rate` | `0.001` | float |
+| `training.optimizer` | `adam` | `adam`, `sgd`, `adamw` |
+| `training.scheduler` | `reduce_on_plateau` | `reduce_on_plateau`, `step`, `cosine` |
+
+Model checkpoints are saved to `models/saved_models/`.
+
+### Evaluation
+
+```bash
+python src/models/evaluate.py
+```
+
+Reports accuracy, precision, recall, F1, and renders a confusion matrix in
+`results/`.
+
+### Flask API
+
+```bash
+# Development
+python flask_app.py
+
+# Production
+gunicorn --bind 0.0.0.0:5000 --workers 2 --timeout 120 flask_app:app
+```
+
+| Endpoint | Method | Body | Response |
+|----------|--------|------|----------|
+| `/predict` | POST | `multipart/form-data` with `file` field | `{"class": "Car", "confidence": 0.92, "scores": {...}}` |
+| `/health` | GET | — | `{"status": "ok"}` |
+| `/docs` | GET | — | Swagger UI |
+| `/metrics` | GET | — | Prometheus metrics |
+
+---
+
+## Testing
+
+```bash
+# Run all tests
+pytest tests/ -v --cov=src/ --cov-report=term-missing
+
+# Expected result (CPU-only environment)
+# 15 passed, 4 skipped
+```
+
+Tests skip automatically when GPU packages (`torch`, `torchvision`,
+`albumentations`) are not installed — no collection errors in CI.
+
+```
+tests/
+|-- conftest.py             # Fixtures (sample_model uses importorskip)
+|-- test_data_loader.py
+|-- test_preprocessing.py
+|-- test_model_training.py  # skipped without torchvision
+|-- test_inference.py       # skipped without torchvision
+|-- test_flask_api.py       # skipped without torchvision
+`-- test_utils.py
+```
+
+---
+
+## CI/CD
+
+Workflow: `.github/workflows/ci.yml`
+
+```
+push / pull_request → main
+        |
+        +--> test (matrix: Python 3.9, 3.10, 3.11)
+        |       pip install requirements-ci.txt
+        |       pip install -e .
+        |       flake8 src/ tests/
+        |       pytest tests/ --cov=src/ --cov-report=xml
+        |       Upload coverage → Codecov
+        |
+        `--> docker (push to main only)
+                docker buildx build
+                docker run → sleep 30 → curl /health
+```
+
+All Actions use **Node 20** runners (`checkout@v4`, `setup-python@v5`,
+`cache@v4`, `codecov-action@v5`, `buildx@v3`).
+
+---
+
+## Configuration
+
+All runtime settings live in `config.yaml`.  The config is loaded via
+`src/utils/config.py`:
+
+```python
+from src.utils.config import load_config
+cfg = load_config("config.yaml")
+print(cfg["model"]["architecture"])  # resnet50
+```
+
+Environment variables (`.env`) are loaded via `python-dotenv` and can override
+config values at runtime.
+
+---
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/my-change`
+3. Install dev deps: `pip install -r requirements-ci.txt && pip install -e .`
+4. Make your changes and add tests
+5. Run `flake8 src/ tests/` and `pytest tests/ -v`
+6. Open a Pull Request
+
+Please read [CONTRIBUTING.md](CONTRIBUTING.md) and follow the
+[Code of Conduct](CODE_OF_CONDUCT.md).
+
+---
+
+## License
+
+MIT License — see [LICENSE](LICENSE) for details.
